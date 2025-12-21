@@ -6,30 +6,42 @@ import { useState } from "react";
 const scheduleData = [
   {
     day: "Day 1",
-    date: "Dec 22, 2023",
-    title: "Airport - Check in Hotel Ubud",
-    pax: "23 PAX",
+    date: "Dec 22, 2025",
+    title: "Arrival - Ubud Check-in",
+    pax: "27 PAX",
     activities: [
       {
         time: "Arrival",
         icon: "✈️",
-        title: "Airport Pickup",
+        title: "Airport pickup",
         details: "Pick up at Airport with flower garland",
       },
       {
-        time: "",
-        icon: "🏨",
-        title: "Check-in at Santa Monica Ubud",
-        details: "Drop only - Rest day",
+        time: "Transfer",
+        icon: "🚐",
+        title: "Transfer to Santa Monica Ubud",
+        details: "1h 50min - 2h drive",
+      },
+      {
+        time: "Dinner",
+        icon: "🍽️",
+        title: "Dinner at Airbnb",
+        details: "",
       },
     ],
   },
   {
     day: "Day 2",
-    date: "Dec 23, 2023",
-    title: "Ubud - ATV Ride",
-    pax: "23 PAX",
+    date: "Dec 23, 2025",
+    title: "Ubud - ATV + VW Ride",
+    pax: "27 PAX",
     activities: [
+      {
+        time: "Morning",
+        icon: "🏨",
+        title: "Pick up at Santa Monica Ubud",
+        details: "",
+      },
       {
         time: "Morning",
         icon: "🏍️",
@@ -40,7 +52,7 @@ const scheduleData = [
         time: "",
         icon: "🚗",
         title: "VW Ride",
-        details: "9 Pax (3 VW) - 1 Hour",
+        details: "9 Pax (3 VW, 1 Hour)",
       },
       {
         time: "Lunch",
@@ -51,14 +63,14 @@ const scheduleData = [
       {
         time: "Afternoon",
         icon: "⛲",
-        title: "Tirta Empul Temple",
-        details: "Holy water temple visit",
+        title: "Tirta Empul Temple visit",
+        details: "",
       },
       {
         time: "",
         icon: "🏛️",
-        title: "Ubud Palace & Market",
-        details: "Shopping and sightseeing",
+        title: "Ubud Palace & Ubud Market",
+        details: "",
       },
       {
         time: "Dinner",
@@ -69,16 +81,16 @@ const scheduleData = [
       {
         time: "",
         icon: "🏨",
-        title: "Back to Hotel",
-        details: "Duration: 10-12 hours",
+        title: "Return to hotel",
+        details: "",
       },
     ],
   },
   {
     day: "Day 3",
-    date: "Dec 24, 2023",
+    date: "Dec 24, 2025",
     title: "Alas Harum - Swing Tour",
-    pax: "25 PAX",
+    pax: "27 PAX",
     activities: [
       {
         time: "Morning",
@@ -88,9 +100,15 @@ const scheduleData = [
       },
       {
         time: "",
+        icon: "🚐",
+        title: "Pick up Chang Jiet & Wei Ting",
+        details: "Hotel near airport, drop to Alas Harum",
+      },
+      {
+        time: "",
         icon: "🌿",
         title: "Alas Harum",
-        details: "Entrance fee included",
+        details: "Entrance fee only",
       },
       {
         time: "Lunch",
@@ -102,13 +120,13 @@ const scheduleData = [
         time: "Afternoon",
         icon: "🎢",
         title: "Aloha Swing",
-        details: "Unlimited swings!",
+        details: "Unlimited swings",
       },
       {
         time: "",
         icon: "☕",
         title: "Oka Luwak Coffee Plantation",
-        details: "Coffee tasting",
+        details: "",
       },
       {
         time: "Dinner",
@@ -119,21 +137,27 @@ const scheduleData = [
       {
         time: "",
         icon: "🏨",
-        title: "Back to Santa Monica Ubud",
-        details: "Duration: 10-12 hours",
+        title: "Return to Santa Monica Ubud",
+        details: "",
+      },
+      {
+        time: "Evening",
+        icon: "🎁",
+        title: "Buy Christmas gifts",
+        details: "One gift per person (by evening of 12/24)",
       },
     ],
   },
   {
     day: "Day 4",
-    date: "Dec 25, 2023",
-    title: "Ubud - Canggu",
-    pax: "25 PAX",
+    date: "Dec 25, 2025",
+    title: "Christmas - Ubud to Seminyak",
+    pax: "27 PAX",
     activities: [
       {
         time: "Morning",
         icon: "🏨",
-        title: "Check out Santa Monica Ubud",
+        title: "Pick up at Santa Monica Ubud",
         details: "",
       },
       {
@@ -146,59 +170,59 @@ const scheduleData = [
         time: "Afternoon",
         icon: "🏖️",
         title: "Love Anchor Canggu Bazaar",
-        details: "Beach club & shopping",
+        details: "",
       },
       {
         time: "",
         icon: "🏨",
-        title: "Check in Lotus Tirta Seminyak",
+        title: "Check-in at Lotus Tirta Seminyak",
         details: "",
       },
       {
         time: "Dinner",
         icon: "🦞",
         title: "Dinner at Jimbaran Seafood",
-        details: "Beachside seafood dinner",
+        details: "",
       },
       {
-        time: "",
-        icon: "🏨",
-        title: "Back to Hotel",
-        details: "Duration: 10-12 hours",
+        time: "Night",
+        icon: "🎄",
+        title: "Christmas Party with gift exchange game",
+        details: "",
       },
     ],
   },
   {
     day: "Day 5",
-    date: "Dec 26, 2023",
-    title: "Free Time",
-    pax: "25 PAX",
+    date: "Dec 26, 2025",
+    title: "Free Day",
+    pax: "27 PAX",
     activities: [
       {
         time: "All Day",
         icon: "🌴",
-        title: "Free Time - No Service",
-        details: "Explore on your own, relax at the hotel, or visit nearby attractions",
+        title: "Free day",
+        details: "Self-arranged activities",
       },
     ],
   },
   {
     day: "Day 6",
-    date: "Dec 27, 2023",
-    title: "Hotel - Airport",
-    pax: "25 PAX",
+    date: "Dec 27, 2025",
+    title: "Seminyak - Airport",
+    pax: "27 PAX",
     activities: [
       {
         time: "Morning",
         icon: "🏨",
-        title: "Hotel Pickup",
+        title: "Pick up by driver at hotel",
         details: "",
       },
       {
-        time: "13:30",
+        time: "13:30+",
         icon: "✈️",
-        title: "Airport Drop",
-        details: "Departure flight at 13:30 PM",
+        title: "Transfer to Airport",
+        details: "Departures from 13:30 onwards",
       },
     ],
   },
@@ -206,6 +230,22 @@ const scheduleData = [
 
 export default function Schedule() {
   const [selectedDay, setSelectedDay] = useState(0);
+  const hotelDetails =
+    selectedDay <= 2
+      ? {
+          period: "Dec 22-25 • Ubud",
+          map: "https://maps.app.goo.gl/f9wxVkWxQSoCjpfPA?g_st=ic",
+          address:
+            "G73M+556, Pejeng Kawan, Tampaksiring, Gianyar Regency, Bali 80552, Indonesia",
+        }
+      : selectedDay <= 4
+        ? {
+            period: "Dec 25-27 • Seminyak",
+            map: "https://maps.app.goo.gl/FQahruHFMcuW61hv6?g_st=ic",
+            address:
+              "Jl. Drupadi II No.99 TM, Seminyak, Kec. Kuta, Kabupaten Badung, Bali 80361, Indonesia",
+          }
+        : null;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -290,6 +330,27 @@ export default function Schedule() {
             </div>
           ))}
         </div>
+
+        {/* Hotel Details */}
+        {hotelDetails && (
+          <div className="mt-6 bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+            <h3 className="font-semibold text-emerald-900 mb-2">
+              🏨 Hotel Details
+            </h3>
+            <div className="space-y-2 text-sm text-emerald-900">
+              <p className="font-medium">{hotelDetails.period}</p>
+              <a
+                href={hotelDetails.map}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline text-emerald-700 break-all"
+              >
+                Map link
+              </a>
+              <p className="text-emerald-800">{hotelDetails.address}</p>
+            </div>
+          </div>
+        )}
 
         {/* Info Box */}
         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
