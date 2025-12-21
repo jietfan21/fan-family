@@ -29,30 +29,55 @@ export default function Home() {
             </div>
           </Link>
 
-          {/* Lucky Draw Feature */}
-          <Link href="/lucky-draw">
+          {/* Car & Room Arrangement Feature */}
+          <Link href="/arrangement">
             <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow active:scale-95 transition-transform">
               <div className="flex items-center gap-4">
-                <div className="text-5xl">🎁</div>
+                <div className="text-5xl">🚌</div>
                 <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-gray-800">Lucky Draw</h2>
-                  <p className="text-gray-600">Christmas gift wheel</p>
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    Car & Room Arrangement
+                  </h2>
+                  <p className="text-gray-600">
+                    Seating and room assignments
+                  </p>
                 </div>
                 <div className="text-gray-400 text-2xl">›</div>
               </div>
             </div>
           </Link>
 
-          {/* Feature 3 (Coming Soon) */}
-          <div className="bg-gray-100 rounded-2xl shadow-lg p-6 opacity-60">
-            <div className="flex items-center gap-4">
-              <div className="text-5xl">✨</div>
-              <div className="flex-1">
-                <h2 className="text-2xl font-bold text-gray-600">Feature 3</h2>
-                <p className="text-gray-500">Coming soon...</p>
+          {/* Quiz Feature */}
+          <Link href="/quiz">
+            <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow active:scale-95 transition-transform">
+              <div className="flex items-center gap-4">
+                <div className="text-5xl">🧠</div>
+                <div className="flex-1">
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    我猜我猜我猜猜猜
+                  </h2>
+                  <p className="text-gray-600">Guessing Quiz</p>
+                </div>
+                <div className="text-gray-400 text-2xl">›</div>
               </div>
             </div>
-          </div>
+          </Link>
+
+          {/* Christmas Party Feature */}
+          <Link href="/lucky-draw">
+            <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow active:scale-95 transition-transform">
+              <div className="flex items-center gap-4">
+                <div className="text-5xl">🎁</div>
+                <div className="flex-1">
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    Christmas Party
+                  </h2>
+                  <p className="text-gray-600">Christmas gift exchange</p>
+                </div>
+                <div className="text-gray-400 text-2xl">›</div>
+              </div>
+            </div>
+          </Link>
         </div>
 
         {/* Footer Info */}
