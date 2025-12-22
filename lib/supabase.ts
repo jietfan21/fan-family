@@ -60,6 +60,12 @@ export type QuizQuestion = {
   correct_answer: string | null;
   points: number;
   created_at: string;
+  release_time: string | null;
+  end_time: string | null;
+  is_prediction: boolean;
+  answer_type: "exact" | "range";
+  answer_min: number | null;
+  answer_max: number | null;
 };
 
 export type QuizAnswer = {
@@ -79,4 +85,19 @@ export type MemberRanking = {
   total_points: number;
   correct_answers: number;
   total_answers: number;
+};
+
+export type MemberRankingWithChange = MemberRanking & {
+  current_rank: number;
+  previous_rank: number | null;
+  rank_change: number;
+};
+
+export type DailyRanking = {
+  id: string;
+  member_id: string;
+  day_id: string;
+  rank_position: number;
+  total_points: number;
+  snapshot_at: string;
 };

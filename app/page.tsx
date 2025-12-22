@@ -91,7 +91,7 @@ function HomeContent() {
 
         <div className="relative max-w-md mx-auto p-6 pt-8">
           {/* User Profile */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowEmojiPicker(true)}
@@ -119,23 +119,29 @@ function HomeContent() {
             </button>
           </div>
 
-          {/* Title */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-white mb-2">
-              Bali Family Trip
-            </h1>
-            <p className="text-[#00b4fb] text-lg">December 22-27, 2025</p>
-            <div className="flex items-center justify-center gap-2 mt-3">
-              <span className="text-xl">🌴</span>
-              <span className="text-sm text-white/70">27 Family Members</span>
-              <span className="text-xl">🌺</span>
+          {/* Title with Family Photo */}
+          <div className="mb-4">
+            {/* Title Text */}
+            <div className="text-center mb-4">
+              <h1 className="text-3xl font-bold text-white mb-1">
+                🌴 Bali Trip 2025 🌺
+              </h1>
+            </div>
+
+            {/* Family Photo */}
+            <div>
+              <img
+                src="/family.jpeg"
+                alt="Family"
+                className="w-full h-48 rounded-xl object-cover shadow-lg ring-4 ring-white/20"
+              />
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-md mx-auto px-4 pb-8">
+      <div className="max-w-md mx-auto px-4 pb-8 -mt-4">
         {/* 2x2 Feature Grid */}
         <div className="grid grid-cols-2 gap-4">
           {features.map((feature) => (
