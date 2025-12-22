@@ -1,89 +1,188 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import EmojiPicker from "@/components/EmojiPicker";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-red-50 to-green-50 p-4">
-      <div className="max-w-md mx-auto pt-12">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-red-600 mb-2">
-            🎄 Bali Family Trip
-          </h1>
-          <p className="text-lg text-gray-600">December 22-27, 2025</p>
-          <p className="text-sm text-gray-500 mt-1">25 Family Members</p>
+    <ProtectedRoute>
+      <HomeContent />
+    </ProtectedRoute>
+  );
+}
+
+function HomeContent() {
+  const { member, logout, updateEmoji, isFirstLogin, setFirstLoginComplete } =
+    useAuth();
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const showPicker = isFirstLogin || showEmojiPicker;
+
+  const handleEmojiSelect = async (emoji: string) => {
+    setIsUpdating(true);
+    await updateEmoji(emoji);
+    setIsUpdating(false);
+    setShowEmojiPicker(false);
+    if (isFirstLogin) {
+      setFirstLoginComplete();
+    }
+  };
+
+  const handleClosePicker = () => {
+    setShowEmojiPicker(false);
+    if (isFirstLogin) {
+      setFirstLoginComplete();
+    }
+  };
+
+  const features = [
+    {
+      href: "/schedule",
+      icon: "📅",
+      title: "Schedule",
+      subtitle: "Trip itinerary",
+      bg: "bg-[#00b4fb]",
+    },
+    {
+      href: "/arrangement",
+      icon: "🚐",
+      title: "Arrangement",
+      subtitle: "Cars & rooms",
+      bg: "bg-[#ff8522]",
+    },
+    {
+      href: "/quiz",
+      icon: "🧠",
+      title: "我猜我猜",
+      subtitle: "Guess & Win",
+      bg: "bg-[#fa655f]",
+    },
+    {
+      href: "/lucky-draw",
+      icon: "🎁",
+      title: "Christmas Party",
+      subtitle: "Gift exchange",
+      bg: "bg-[#436c34]",
+    },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-[#011a42] via-[#0a2d5c] to-[#011a42]">
+      {/* Emoji Picker Modal */}
+      <EmojiPicker
+        isOpen={showPicker}
+        onClose={handleClosePicker}
+        onSelect={handleEmojiSelect}
+        currentEmoji={member?.emoji || undefined}
+      />
+
+      {/* Header */}
+      <div className="relative overflow-hidden">
+        {/* Background decorations */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-4 left-4 text-6xl">🌴</div>
+          <div className="absolute top-8 right-8 text-5xl">🌺</div>
+          <div className="absolute bottom-0 left-1/3 text-4xl">🌊</div>
         </div>
 
-        {/* Feature Cards */}
-        <div className="space-y-4">
-          {/* Schedule Feature */}
-          <Link href="/schedule">
-            <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow active:scale-95 transition-transform">
-              <div className="flex items-center gap-4">
-                <div className="text-5xl">📅</div>
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-gray-800">Schedule</h2>
-                  <p className="text-gray-600">View trip itinerary</p>
-                </div>
-                <div className="text-gray-400 text-2xl">›</div>
+        <div className="relative max-w-md mx-auto p-6 pt-8">
+          {/* User Profile */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowEmojiPicker(true)}
+                disabled={isUpdating}
+                className="w-14 h-14 rounded-full bg-[#00b4fb] flex items-center justify-center text-2xl shadow-lg hover:bg-[#4dc9ff] transition-all active:scale-95 ring-2 ring-white/30"
+              >
+                {member?.emoji || (
+                  <span className="text-white font-bold text-xl">
+                    {member?.name.charAt(0)}
+                  </span>
+                )}
+              </button>
+              <div>
+                <p className="font-bold text-lg text-white">{member?.name}</p>
+                <p className="text-sm text-[#00b4fb]">
+                  {member?.is_dev ? "Developer" : "Family Member"}
+                </p>
               </div>
             </div>
-          </Link>
+            <button
+              onClick={logout}
+              className="text-sm text-white/60 hover:text-white transition-colors px-3 py-1 rounded-full hover:bg-white/10"
+            >
+              Logout
+            </button>
+          </div>
 
-          {/* Car & Room Arrangement Feature */}
-          <Link href="/arrangement">
-            <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow active:scale-95 transition-transform">
-              <div className="flex items-center gap-4">
-                <div className="text-5xl">🚌</div>
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-gray-800">
-                    Car & Room Arrangement
-                  </h2>
-                  <p className="text-gray-600">
-                    Seating and room assignments
-                  </p>
-                </div>
-                <div className="text-gray-400 text-2xl">›</div>
-              </div>
+          {/* Title */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-white mb-2">
+              Bali Family Trip
+            </h1>
+            <p className="text-[#00b4fb] text-lg">December 22-27, 2025</p>
+            <div className="flex items-center justify-center gap-2 mt-3">
+              <span className="text-xl">🌴</span>
+              <span className="text-sm text-white/70">27 Family Members</span>
+              <span className="text-xl">🌺</span>
             </div>
-          </Link>
+          </div>
+        </div>
+      </div>
 
-          {/* Quiz Feature */}
-          <Link href="/quiz">
-            <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow active:scale-95 transition-transform">
-              <div className="flex items-center gap-4">
-                <div className="text-5xl">🧠</div>
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-gray-800">
-                    我猜我猜我猜猜猜
+      {/* Main Content */}
+      <div className="max-w-md mx-auto px-4 pb-8">
+        {/* 2x2 Feature Grid */}
+        <div className="grid grid-cols-2 gap-4">
+          {features.map((feature) => (
+            <Link key={feature.href} href={feature.href}>
+              <div
+                className={`${feature.bg} rounded-3xl p-5 h-40 flex flex-col justify-between shadow-lg hover:shadow-xl transition-all active:scale-95 hover:-translate-y-1`}
+              >
+                <div className="text-4xl">{feature.icon}</div>
+                <div className="text-white">
+                  <h2 className="text-lg font-bold leading-tight">
+                    {feature.title}
                   </h2>
-                  <p className="text-gray-600">Guessing Quiz</p>
+                  <p className="text-sm text-white/80">{feature.subtitle}</p>
                 </div>
-                <div className="text-gray-400 text-2xl">›</div>
               </div>
-            </div>
-          </Link>
-
-          {/* Christmas Party Feature */}
-          <Link href="/lucky-draw">
-            <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow active:scale-95 transition-transform">
-              <div className="flex items-center gap-4">
-                <div className="text-5xl">🎁</div>
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-gray-800">
-                    Christmas Party
-                  </h2>
-                  <p className="text-gray-600">Christmas gift exchange</p>
-                </div>
-                <div className="text-gray-400 text-2xl">›</div>
-              </div>
-            </div>
-          </Link>
+            </Link>
+          ))}
         </div>
 
-        {/* Footer Info */}
-        <div className="mt-12 text-center text-sm text-gray-500">
-          <p>Share this link with family members</p>
-          <p className="mt-2 text-xs">No login required 🎉</p>
+        {/* Trip Info Card */}
+        <div className="mt-6 bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="text-3xl">✈️</div>
+              <div>
+                <p className="font-semibold text-white">Ready for Bali!</p>
+                <p className="text-sm text-white/60">Ubud & Seminyak Adventure</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-[#00b4fb]">6</p>
+              <p className="text-xs text-white/60">Days</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Tip Card */}
+        <div className="mt-4 bg-[#ff8522]/20 rounded-2xl p-4 border border-[#ff8522]/30">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">💡</span>
+            <div>
+              <p className="font-medium text-[#ff8522]">Tip of the day</p>
+              <p className="text-sm text-white/70 mt-1">
+                Tap your profile picture to change your avatar anytime!
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

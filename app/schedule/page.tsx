@@ -248,16 +248,16 @@ export default function Schedule() {
         : null;
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gradient-to-b from-[#011a42] via-[#0a2d5c] to-[#011a42] pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-red-500 to-green-500 text-white p-4 sticky top-0 z-10 shadow-md">
+      <div className="bg-[#00b4fb] text-white p-4 sticky top-0 z-10 shadow-md">
         <div className="max-w-md mx-auto">
           <div className="flex items-center gap-3 mb-3">
-            <Link href="/" className="text-2xl">
+            <Link href="/" className="text-2xl hover:opacity-80 transition-opacity">
               ←
             </Link>
             <div>
-              <h1 className="text-xl font-bold">Trip Schedule</h1>
+              <h1 className="text-xl font-bold">📅 Trip Schedule</h1>
               <p className="text-sm opacity-90">Dec 22-27, 2025 • Bali</p>
             </div>
           </div>
@@ -270,7 +270,7 @@ export default function Schedule() {
                 onClick={() => setSelectedDay(index)}
                 className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium transition-all ${
                   selectedDay === index
-                    ? "bg-white text-red-600 shadow-lg"
+                    ? "bg-white text-[#00b4fb] shadow-lg"
                     : "bg-white/20 text-white hover:bg-white/30"
                 }`}
               >
@@ -284,17 +284,17 @@ export default function Schedule() {
       {/* Schedule Content */}
       <div className="max-w-md mx-auto p-4">
         {/* Day Header */}
-        <div className="mb-4">
+        <div className="mb-4 bg-white/10 rounded-2xl p-4">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-2xl font-bold text-gray-800">
+            <h2 className="text-2xl font-bold text-white">
               {scheduleData[selectedDay].day}
             </h2>
-            <span className="text-sm text-white bg-red-500 px-3 py-1 rounded-full">
+            <span className="text-sm text-white bg-[#ff8522] px-3 py-1 rounded-full">
               {scheduleData[selectedDay].pax}
             </span>
           </div>
-          <p className="text-gray-600">{scheduleData[selectedDay].date}</p>
-          <p className="text-lg font-semibold text-gray-700 mt-1">
+          <p className="text-white/70">{scheduleData[selectedDay].date}</p>
+          <p className="text-lg font-semibold text-[#00b4fb] mt-1">
             {scheduleData[selectedDay].title}
           </p>
         </div>
@@ -313,11 +313,11 @@ export default function Schedule() {
                 {/* Content */}
                 <div className="flex-1">
                   {activity.time && (
-                    <div className="text-xs text-gray-500 font-medium mb-1">
+                    <div className="text-xs text-[#00b4fb] font-medium mb-1">
                       {activity.time}
                     </div>
                   )}
-                  <h3 className="text-lg font-bold text-gray-800">
+                  <h3 className="text-lg font-bold text-[#011a42]">
                     {activity.title}
                   </h3>
                   {activity.details && (
@@ -333,29 +333,29 @@ export default function Schedule() {
 
         {/* Hotel Details */}
         {hotelDetails && (
-          <div className="mt-6 bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-            <h3 className="font-semibold text-emerald-900 mb-2">
+          <div className="mt-6 bg-[#436c34]/20 border border-[#436c34]/30 rounded-xl p-4">
+            <h3 className="font-semibold text-[#436c34] mb-2">
               🏨 Hotel Details
             </h3>
-            <div className="space-y-2 text-sm text-emerald-900">
-              <p className="font-medium">{hotelDetails.period}</p>
+            <div className="space-y-2 text-sm">
+              <p className="font-medium text-white">{hotelDetails.period}</p>
               <a
                 href={hotelDetails.map}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="underline text-emerald-700 break-all"
+                className="underline text-[#00b4fb] break-all"
               >
-                Map link
+                View on Map
               </a>
-              <p className="text-emerald-800">{hotelDetails.address}</p>
+              <p className="text-white/70">{hotelDetails.address}</p>
             </div>
           </div>
         )}
 
         {/* Info Box */}
-        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
-          <h3 className="font-semibold text-blue-900 mb-2">📋 Included:</h3>
-          <ul className="text-sm text-blue-800 space-y-1">
+        <div className="mt-6 bg-[#00b4fb]/20 border border-[#00b4fb]/30 rounded-xl p-4">
+          <h3 className="font-semibold text-[#00b4fb] mb-2">📋 Included:</h3>
+          <ul className="text-sm text-white/80 space-y-1">
             <li>• Private car + driver + petrol</li>
             <li>• Entrance tickets to all destinations</li>
             <li>• Complimentary 1 bottle mineral water/person/day</li>

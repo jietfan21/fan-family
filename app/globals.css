@@ -3,6 +3,13 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Custom Color Palette */
+  --navy: #011a42;
+  --cyan: #00b4fb;
+  --orange: #ff8522;
+  --coral: #fa655f;
+  --green: #436c34;
 }
 
 @theme inline {
@@ -10,11 +17,23 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Custom colors for Tailwind */
+  --color-navy: #011a42;
+  --color-navy-light: #0a2d5c;
+  --color-cyan: #00b4fb;
+  --color-cyan-light: #4dc9ff;
+  --color-orange: #ff8522;
+  --color-orange-light: #ffa559;
+  --color-coral: #fa655f;
+  --color-coral-light: #fb8a86;
+  --color-green: #436c34;
+  --color-green-light: #5a8a48;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #011a42;
     --foreground: #ededed;
   }
 }
