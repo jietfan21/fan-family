@@ -48,11 +48,11 @@ function HomeContent() {
       bg: "bg-[#00b4fb]",
     },
     {
-      href: "/arrangement",
-      icon: "🚐",
-      title: "Arrangement",
-      subtitle: "Cars & rooms",
-      bg: "bg-[#ff8522]",
+      href: "/currency",
+      icon: "💱",
+      title: "Currency",
+      subtitle: "IDR converter",
+      bg: "bg-[#9b59b6]",
     },
     {
       href: "/quiz",
@@ -62,11 +62,11 @@ function HomeContent() {
       bg: "bg-[#fa655f]",
     },
     {
-      href: "/lucky-draw",
-      icon: "🎁",
-      title: "Christmas Party",
-      subtitle: "Gift exchange",
-      bg: "bg-[#436c34]",
+      href: "/arrangement",
+      icon: "🚐",
+      title: "Arrangement",
+      subtitle: "Cars & rooms",
+      bg: "bg-[#ff8522]",
     },
   ];
 
@@ -155,22 +155,23 @@ function HomeContent() {
           ))}
         </div>
 
-        {/* Trip Info Card */}
-        <div className="mt-6 bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="text-3xl">✈️</div>
-              <div>
-                <p className="font-semibold text-white">Ready for Bali!</p>
-                <p className="text-sm text-white/60">Ubud & Seminyak Adventure</p>
+        {/* Christmas Party Card */}
+        <Link href="/lucky-draw">
+          <div className="mt-6 bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20 hover:bg-white/15 transition-all active:scale-95">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="text-3xl">🎁</div>
+                <div>
+                  <p className="font-semibold text-white">Christmas Party</p>
+                  <p className="text-sm text-white/60">Gift exchange & lucky draw</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl">🎄</p>
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold text-[#00b4fb]">6</p>
-              <p className="text-xs text-white/60">Days</p>
-            </div>
           </div>
-        </div>
+        </Link>
 
         {/* Tip Card */}
         <div className="mt-4 bg-[#ff8522]/20 rounded-2xl p-4 border border-[#ff8522]/30">

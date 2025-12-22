@@ -141,10 +141,10 @@ const scheduleData = [
         details: "",
       },
       {
-        time: "Evening",
-        icon: "🎁",
-        title: "Buy Christmas gifts",
-        details: "One gift per person (by evening of 12/24)",
+        time: "Night",
+        icon: "🎄",
+        title: "Christmas Party with gift exchange game",
+        details: "",
       },
     ],
   },
@@ -182,12 +182,6 @@ const scheduleData = [
         time: "Dinner",
         icon: "🦞",
         title: "Dinner at Jimbaran Seafood",
-        details: "",
-      },
-      {
-        time: "Night",
-        icon: "🎄",
-        title: "Christmas Party with gift exchange game",
         details: "",
       },
     ],
@@ -268,13 +262,14 @@ export default function Schedule() {
               <button
                 key={index}
                 onClick={() => setSelectedDay(index)}
-                className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium transition-all ${
+                className={`px-3 py-2 rounded-full whitespace-nowrap text-sm font-medium transition-all flex flex-col items-center ${
                   selectedDay === index
                     ? "bg-white text-[#00b4fb] shadow-lg"
                     : "bg-white/20 text-white hover:bg-white/30"
                 }`}
               >
-                {dayData.day}
+                <div>{dayData.day}</div>
+                <div className="text-xs opacity-75">{dayData.date.split(',')[0]}</div>
               </button>
             ))}
           </div>
