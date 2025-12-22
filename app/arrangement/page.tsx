@@ -2,117 +2,15 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { getSupabase, Member } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { getSupabase, Member, CarAssignment, RoomAssignment } from "@/lib/supabase";
 import MemberBadge from "@/components/MemberBadge";
 import MemberModal from "@/components/MemberModal";
+import { Settings } from "lucide-react";
 
 type MainTab = "car" | "room";
 type HotelTab = "hotel1" | "hotel2";
-
-const vanGroups = [
-  {
-    name: "Van A",
-    leader: "聪婷",
-    members: [
-      "国雄",
-      "Kris",
-      "昌鸿",
-      "昌荣",
-      "Cikgu",
-      "凤春",
-      "聪琳",
-      "聪婷",
-      "聪云",
-    ],
-  },
-  {
-    name: "Van B",
-    leader: "敬铭",
-    members: [
-      "国强",
-      "君毓",
-      "敬铭",
-      "国光",
-      "Kelly",
-      "昌贤",
-      "昌容",
-      "昌捷",
-      "炜婷",
-    ],
-  },
-  {
-    name: "Van C",
-    leader: "昌耀",
-    members: [
-      "思瑩",
-      "聪颖",
-      "阿辉",
-      "老王",
-      "WENDY",
-      "昌耀",
-      "美凤",
-      "Thomas",
-      "敬扬",
-    ],
-  },
-];
-
-type RoomData = {
-  type: "twin" | "double" | "triple" | "family";
-  members: string[];
-  note?: string;
-};
-
-type HotelRooms = {
-  name: string;
-  icon: string;
-  rooms: RoomData[];
-};
-
-const hotel1Data: HotelRooms[] = [
-  {
-    name: "Santa Monica Ubud",
-    icon: "🏨",
-    rooms: [
-      { type: "twin", members: ["昌鸿", "昌荣"] },
-      { type: "twin", members: ["敬铭", "昌贤"] },
-      { type: "double", members: ["国雄", "Kris"] },
-      { type: "double", members: ["国强", "君毓"] },
-      { type: "double", members: ["Cikgu", "凤春"] },
-      { type: "double", members: ["国光", "Kelly"] },
-    ],
-  },
-  {
-    name: "Villa Kala Ubud",
-    icon: "🏡",
-    rooms: [
-      { type: "twin", members: ["聪婷", "聪云"] },
-      { type: "twin", members: ["思瑩", "聪琳"] },
-      { type: "triple", members: ["美凤", "Thomas", "敬扬"] },
-      { type: "family", members: ["聪颖", "阿辉", "昌捷", "炜婷"], note: "Extra bed" },
-      { type: "double", members: ["WENDY", "老王"] },
-      { type: "double", members: ["昌容", "昌耀"] },
-    ],
-  },
-];
-
-type Hotel2RoomData = {
-  type: "standard" | "2br-villa" | "3br-villa";
-  label?: string;
-  members: string[];
-};
-
-const hotel2Data: Hotel2RoomData[] = [
-  { type: "standard", members: ["聪颖", "阿辉"] },
-  { type: "standard", members: ["WENDY", "老王"] },
-  { type: "standard", members: ["昌捷", "炜婷"] },
-  { type: "standard", members: ["思瑩", "聪琳"] },
-  { type: "standard", members: ["昌容"] },
-  { type: "standard", members: ["昌耀", "昌贤"] },
-  { type: "2br-villa", members: ["国雄", "Kris", "昌荣", "昌鸿"] },
-  { type: "3br-villa", label: "Villa 1", members: ["国强", "君毓", "Cikgu", "凤春", "国光", "Kelly"] },
-  { type: "3br-villa", label: "Villa 2", members: ["美凤", "Thomas", "聪婷", "聪云", "敬铭", "敬扬"] },
-];
 
 const hotelData: Record<
   HotelTab,
@@ -121,7 +19,6 @@ const hotelData: Record<
     title: string;
     subtitle: string;
     dates: string;
-    sections: { title: string; items: string[] }[];
   }
 > = {
   hotel1: {
@@ -129,66 +26,67 @@ const hotelData: Record<
     title: "Ubud Stay",
     subtitle: "Santa Monica Ubud + Villa Kala Ubud",
     dates: "Dec 22-25, 2025",
-    sections: [],
   },
   hotel2: {
     tabLabel: "Hotel 2",
     title: "Seminyak Stay",
     subtitle: "Lotus Tirta Seminyak",
     dates: "Dec 25-27, 2025",
-    sections: [
-      {
-        title: "6 Standard Double Rooms",
-        items: [
-          "聪颖 + 阿辉",
-          "WENDY + 老王",
-          "昌捷 + 炜婷",
-          "思瑩 + 聪琳",
-          "昌容",
-          "昌耀 + 昌贤",
-        ],
-      },
-      {
-        title: "Two-Bedroom Pool Villa",
-        items: ["国雄 + Kris", "昌荣 + 昌鸿"],
-      },
-      {
-        title: "Three-Bedroom Pool Villas",
-        items: [
-          "Villa 1: 国强 + 君毓, Cikgu + 凤春, 国光 + Kelly",
-          "Villa 2: 美凤 + Thomas, 聪婷 + 聪云, 敬铭 + 敬扬",
-        ],
-      },
-    ],
   },
 };
 
 export default function ArrangementPage() {
+  const { member } = useAuth();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<MainTab>("car");
   const [activeHotel, setActiveHotel] = useState<HotelTab>("hotel1");
   const [members, setMembers] = useState<Member[]>([]);
+  const [cars, setCars] = useState<CarAssignment[]>([]);
+  const [rooms, setRooms] = useState<RoomAssignment[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedMember, setSelectedMember] = useState<{
     member: Member | null;
     displayName: string;
   } | null>(null);
 
   const selectedHotel = hotelData[activeHotel];
+  const supabase = getSupabase();
 
   useEffect(() => {
-    async function fetchMembers() {
+    async function fetchData() {
+      setLoading(true);
       try {
-        const supabase = getSupabase();
-        const { data } = await supabase
+        // Fetch members
+        const { data: membersData } = await supabase
           .from("members")
           .select("*");
-        if (data) {
-          setMembers(data);
+        if (membersData) {
+          setMembers(membersData);
         }
-      } catch {
-        // Supabase not configured, continue without member data
+
+        // Fetch cars
+        const { data: carsData } = await supabase
+          .from("car_assignments")
+          .select("*")
+          .order("display_order");
+        if (carsData) {
+          setCars(carsData as CarAssignment[]);
+        }
+
+        // Fetch rooms
+        const { data: roomsData } = await supabase
+          .from("room_assignments")
+          .select("*")
+          .order("display_order");
+        if (roomsData) {
+          setRooms(roomsData as RoomAssignment[]);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
       }
+      setLoading(false);
     }
-    fetchMembers();
+    fetchData();
   }, []);
 
   const handleMemberClick = (member: Member | null, displayName: string) => {
@@ -199,18 +97,50 @@ export default function ArrangementPage() {
     setSelectedMember(null);
   };
 
+  // Group rooms by hotel name for hotel1
+  const hotel1Rooms = rooms.filter((r) => r.hotel_key === "hotel1");
+  const hotel1Groups: Record<string, RoomAssignment[]> = {};
+  hotel1Rooms.forEach((room) => {
+    if (!hotel1Groups[room.hotel_name]) {
+      hotel1Groups[room.hotel_name] = [];
+    }
+    hotel1Groups[room.hotel_name].push(room);
+  });
+
+  const hotel2Rooms = rooms.filter((r) => r.hotel_key === "hotel2");
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#011a42] via-[#0a2d5c] to-[#011a42] flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#011a42] via-[#0a2d5c] to-[#011a42] pb-20">
       {/* Header */}
       <div className="bg-[#ff8522] text-white p-4 sticky top-0 z-10 shadow-md">
-        <div className="max-w-md mx-auto flex items-center gap-3">
-          <Link href="/" className="text-2xl hover:opacity-80 transition-opacity">
-            ←
-          </Link>
-          <div>
-            <h1 className="text-xl font-bold">🚐 Car & Room Arrangement</h1>
-            <p className="text-sm opacity-90">Dec 22-27, 2025 • Bali</p>
+        <div className="max-w-md mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="text-2xl hover:opacity-80 transition-opacity">
+              ←
+            </Link>
+            <div>
+              <h1 className="text-xl font-bold">🚐 Car & Room Arrangement</h1>
+              <p className="text-sm opacity-90">Dec 22-27, 2025 • Bali</p>
+            </div>
           </div>
+          {/* Settings button - only visible to admin */}
+          {member?.is_dev && (
+            <button
+              onClick={() => router.push("/arrangement/admin")}
+              className="p-2 hover:bg-white/20 rounded-lg transition-all"
+              title="Edit arrangements"
+            >
+              <Settings className="w-5 h-5" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -241,9 +171,9 @@ export default function ArrangementPage() {
 
         {activeTab === "car" ? (
           <div className="space-y-4">
-            {vanGroups.map((van) => (
+            {cars.map((car) => (
               <div
-                key={van.name}
+                key={car.id}
                 className="bg-white rounded-2xl shadow-md p-4 hover:shadow-lg transition-shadow"
               >
                 <div className="flex items-center justify-between">
@@ -252,13 +182,13 @@ export default function ArrangementPage() {
                     <div>
                       <p className="text-xs text-gray-500">Leader</p>
                       <h2 className="text-lg font-bold text-[#011a42]">
-                        {van.name}
+                        {car.car_name}
                       </h2>
                     </div>
                   </div>
                   <span className="text-xs font-semibold text-[#ff8522] bg-[#ff8522]/10 px-3 py-1 rounded-full">
                     <MemberBadge
-                      name={van.leader}
+                      name={car.leader || ""}
                       members={members}
                       onClick={handleMemberClick}
                     />
@@ -266,9 +196,9 @@ export default function ArrangementPage() {
                 </div>
 
                 <div className="mt-4 grid grid-cols-2 gap-2">
-                  {van.members.map((memberName) => (
+                  {car.members.map((memberName, idx) => (
                     <div
-                      key={memberName}
+                      key={idx}
                       className="text-sm text-[#011a42] bg-gray-100 rounded-lg px-3 py-2 text-center"
                     >
                       <MemberBadge
@@ -311,28 +241,28 @@ export default function ArrangementPage() {
 
             {activeHotel === "hotel1" ? (
               <div className="space-y-6">
-                {hotel1Data.map((hotel) => (
-                  <div key={hotel.name}>
+                {Object.entries(hotel1Groups).map(([hotelName, hotelRooms]) => (
+                  <div key={hotelName}>
                     {/* Hotel Header */}
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-2xl">{hotel.icon}</span>
-                      <h3 className="text-lg font-bold text-white">{hotel.name}</h3>
+                      <span className="text-2xl">{hotelName.includes("Villa") ? "🏡" : "🏨"}</span>
+                      <h3 className="text-lg font-bold text-white">{hotelName}</h3>
                     </div>
 
                     {/* Rooms Grid */}
                     <div className="grid grid-cols-2 gap-3">
-                      {hotel.rooms.map((room, idx) => {
-                        const roomTypeConfig = {
+                      {hotelRooms.map((room) => {
+                        const roomTypeConfig: Record<string, { label: string; icon: string; color: string }> = {
                           twin: { label: "Twin", icon: "🛏️🛏️", color: "bg-[#00b4fb]" },
                           double: { label: "Double", icon: "🛏️", color: "bg-[#436c34]" },
                           triple: { label: "Triple", icon: "🛏️", color: "bg-[#ff8522]" },
                           family: { label: "Family", icon: "🏠", color: "bg-[#9333ea]" },
                         };
-                        const config = roomTypeConfig[room.type];
+                        const config = roomTypeConfig[room.room_type] || roomTypeConfig.double;
 
                         return (
                           <div
-                            key={idx}
+                            key={room.id}
                             className="bg-white rounded-xl shadow-md p-3 hover:shadow-lg transition-shadow"
                           >
                             {/* Room Type Badge */}
@@ -347,7 +277,7 @@ export default function ArrangementPage() {
 
                             {/* Members */}
                             <div className="flex flex-wrap gap-1">
-                              {room.members.map((memberName) => (
+                              {room.members.filter(m => m.trim() !== "").map((memberName) => (
                                 <div
                                   key={memberName}
                                   className="text-sm bg-gray-100 rounded-lg px-2 py-1"
@@ -370,88 +300,58 @@ export default function ArrangementPage() {
             ) : (
               <div className="space-y-4">
                 {/* Standard Rooms */}
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-xl">🚪</span>
-                    <h3 className="text-base font-bold text-white">Standard Double Rooms</h3>
-                    <span className="text-xs bg-[#00b4fb]/20 text-[#00b4fb] px-2 py-0.5 rounded-full">
-                      {hotel2Data.filter(r => r.type === "standard").length} rooms
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    {hotel2Data.filter(r => r.type === "standard").map((room, idx) => (
-                      <div
-                        key={idx}
-                        className="bg-white rounded-xl shadow-md p-3 hover:shadow-lg transition-shadow"
-                      >
-                        <div className="flex flex-wrap gap-1">
-                          {room.members.map((memberName) => (
-                            <div
-                              key={memberName}
-                              className="text-sm bg-gray-100 rounded-lg px-2 py-1"
-                            >
-                              <MemberBadge
-                                name={memberName}
-                                members={members}
-                                onClick={handleMemberClick}
-                              />
-                            </div>
-                          ))}
+                {hotel2Rooms.filter(r => r.room_type === "standard").length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-xl">🚪</span>
+                      <h3 className="text-base font-bold text-white">Standard Double Rooms</h3>
+                      <span className="text-xs bg-[#00b4fb]/20 text-[#00b4fb] px-2 py-0.5 rounded-full">
+                        {hotel2Rooms.filter(r => r.room_type === "standard").length} rooms
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {hotel2Rooms.filter(r => r.room_type === "standard").map((room) => (
+                        <div
+                          key={room.id}
+                          className="bg-white rounded-xl shadow-md p-3 hover:shadow-lg transition-shadow"
+                        >
+                          <div className="flex flex-wrap gap-1">
+                            {room.members.filter(m => m.trim() !== "").map((memberName) => (
+                              <div
+                                key={memberName}
+                                className="text-sm bg-gray-100 rounded-lg px-2 py-1"
+                              >
+                                <MemberBadge
+                                  name={memberName}
+                                  members={members}
+                                  onClick={handleMemberClick}
+                                />
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* 2-Bedroom Villa */}
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-xl">🏡</span>
-                    <h3 className="text-base font-bold text-white">Two-Bedroom Pool Villa</h3>
-                  </div>
-                  {hotel2Data.filter(r => r.type === "2br-villa").map((room, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-white rounded-xl shadow-md p-4 hover:shadow-lg transition-shadow"
-                    >
-                      <div className="flex flex-wrap gap-2">
-                        {room.members.map((memberName) => (
-                          <div
-                            key={memberName}
-                            className="text-sm bg-[#ff8522]/10 rounded-lg px-3 py-1.5"
-                          >
-                            <MemberBadge
-                              name={memberName}
-                              members={members}
-                              onClick={handleMemberClick}
-                            />
-                          </div>
-                        ))}
-                      </div>
+                {hotel2Rooms.filter(r => r.room_type === "2br-villa").length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-xl">🏡</span>
+                      <h3 className="text-base font-bold text-white">Two-Bedroom Pool Villa</h3>
                     </div>
-                  ))}
-                </div>
-
-                {/* 3-Bedroom Villas */}
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-xl">🏠</span>
-                    <h3 className="text-base font-bold text-white">Three-Bedroom Pool Villas</h3>
-                  </div>
-                  <div className="space-y-3">
-                    {hotel2Data.filter(r => r.type === "3br-villa").map((room, idx) => (
+                    {hotel2Rooms.filter(r => r.room_type === "2br-villa").map((room) => (
                       <div
-                        key={idx}
+                        key={room.id}
                         className="bg-white rounded-xl shadow-md p-4 hover:shadow-lg transition-shadow"
                       >
-                        {room.label && (
-                          <div className="text-xs font-semibold text-[#9333ea] mb-2">{room.label}</div>
-                        )}
                         <div className="flex flex-wrap gap-2">
-                          {room.members.map((memberName) => (
+                          {room.members.filter(m => m.trim() !== "").map((memberName) => (
                             <div
                               key={memberName}
-                              className="text-sm bg-[#9333ea]/10 rounded-lg px-3 py-1.5"
+                              className="text-sm bg-[#ff8522]/10 rounded-lg px-3 py-1.5"
                             >
                               <MemberBadge
                                 name={memberName}
@@ -464,7 +364,43 @@ export default function ArrangementPage() {
                       </div>
                     ))}
                   </div>
-                </div>
+                )}
+
+                {/* 3-Bedroom Villas */}
+                {hotel2Rooms.filter(r => r.room_type === "3br-villa").length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-xl">🏠</span>
+                      <h3 className="text-base font-bold text-white">Three-Bedroom Pool Villas</h3>
+                    </div>
+                    <div className="space-y-3">
+                      {hotel2Rooms.filter(r => r.room_type === "3br-villa").map((room) => (
+                        <div
+                          key={room.id}
+                          className="bg-white rounded-xl shadow-md p-4 hover:shadow-lg transition-shadow"
+                        >
+                          {room.room_label && (
+                            <div className="text-xs font-semibold text-[#9333ea] mb-2">{room.room_label}</div>
+                          )}
+                          <div className="flex flex-wrap gap-2">
+                            {room.members.filter(m => m.trim() !== "").map((memberName) => (
+                              <div
+                                key={memberName}
+                                className="text-sm bg-[#9333ea]/10 rounded-lg px-3 py-1.5"
+                              >
+                                <MemberBadge
+                                  name={memberName}
+                                  members={members}
+                                  onClick={handleMemberClick}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

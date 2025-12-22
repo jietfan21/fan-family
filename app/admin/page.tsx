@@ -16,6 +16,10 @@ type QuestionForm = {
   correct_answer: string;
   answer_min: string;
   answer_max: string;
+  release_date: string;
+  release_time: string;
+  end_date: string;
+  end_time: string;
 };
 
 const DAYS = [
@@ -33,11 +37,6 @@ export default function AdminPage() {
   const [selectedDay, setSelectedDay] = useState("day2");
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [loading, setLoading] = useState(true);
-  const [releaseDate, setReleaseDate] = useState("2025-12-23");
-  const [releaseTime, setReleaseTime] = useState("09:00");
-  const [endDate, setEndDate] = useState("2025-12-23");
-  const [endTime, setEndTime] = useState("23:00");
-  const [dateTimeError, setDateTimeError] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<QuizQuestion | null>(null);
   const [formData, setFormData] = useState<QuestionForm>({
@@ -49,6 +48,10 @@ export default function AdminPage() {
     correct_answer: "",
     answer_min: "",
     answer_max: "",
+    release_date: "2025-12-23",
+    release_time: "09:00",
+    end_date: "2025-12-23",
+    end_time: "23:00",
   });
 
   const supabase = getSupabase();
@@ -80,45 +83,28 @@ export default function AdminPage() {
 
     if (!error && data) {
       setQuestions(data as QuizQuestion[]);
-
-      // Load timing from first question
-      if (data.length > 0 && data[0].release_time) {
-        const release = new Date(data[0].release_time);
-        const end = new Date(data[0].end_time!);
-
-        // Extract date and time
-        setReleaseDate(release.toISOString().split('T')[0]);
-        setReleaseTime(
-          `${release.getHours().toString().padStart(2, "0")}:${release.getMinutes().toString().padStart(2, "0")}`
-        );
-        setEndDate(end.toISOString().split('T')[0]);
-        setEndTime(
-          `${end.getHours().toString().padStart(2, "0")}:${end.getMinutes().toString().padStart(2, "0")}`
-        );
-      }
     }
     setLoading(false);
   };
 
   const validateDateTime = () => {
     // Build full datetime objects
-    const releaseDateTime = new Date(`${releaseDate}T${releaseTime}:00+08:00`);
-    const endDateTime = new Date(`${endDate}T${endTime}:00+08:00`);
+    const releaseDateTime = new Date(`${formData.release_date}T${formData.release_time}:00+08:00`);
+    const endDateTime = new Date(`${formData.end_date}T${formData.end_time}:00+08:00`);
     const now = new Date();
 
     // Check if release time is in the past
     if (releaseDateTime < now) {
-      setDateTimeError("Release time cannot be in the past");
+      alert("Release time cannot be in the past");
       return false;
     }
 
     // Check if end time is before release time
     if (endDateTime <= releaseDateTime) {
-      setDateTimeError("End time must be after release time");
+      alert("End time must be after release time");
       return false;
     }
 
-    setDateTimeError("");
     return true;
   };
 
@@ -132,8 +118,8 @@ export default function AdminPage() {
     if (!selectedDayData) return;
 
     // Build release/end timestamps (Bali timezone UTC+8)
-    const releaseTimestamp = `${releaseDate}T${releaseTime}:00+08:00`;
-    const endTimestamp = `${endDate}T${endTime}:00+08:00`;
+    const releaseTimestamp = `${formData.release_date}T${formData.release_time}:00+08:00`;
+    const endTimestamp = `${formData.end_date}T${formData.end_time}:00+08:00`;
 
     // Generate a unique ID for the question
     const questionId = `${selectedDay}_q${Date.now()}`;
@@ -186,8 +172,15 @@ export default function AdminPage() {
   const handleUpdateQuestion = async () => {
     if (!editingQuestion) return;
 
+    // Validate date/time first
+    if (!validateDateTime()) {
+      return;
+    }
+
     const updateData: any = {
       prompt: formData.prompt,
+      release_time: `${formData.release_date}T${formData.release_time}:00+08:00`,
+      end_time: `${formData.end_date}T${formData.end_time}:00+08:00`,
     };
 
     // Only update answer if not prediction or if setting answer
@@ -244,6 +237,25 @@ export default function AdminPage() {
 
   const startEdit = (question: QuizQuestion) => {
     setEditingQuestion(question);
+
+    // Extract release/end date and time
+    let relDate = "2025-12-23";
+    let relTime = "09:00";
+    let endDate = "2025-12-23";
+    let endTime = "23:00";
+
+    if (question.release_time) {
+      const release = new Date(question.release_time);
+      relDate = release.toISOString().split('T')[0];
+      relTime = `${release.getHours().toString().padStart(2, "0")}:${release.getMinutes().toString().padStart(2, "0")}`;
+    }
+
+    if (question.end_time) {
+      const end = new Date(question.end_time);
+      endDate = end.toISOString().split('T')[0];
+      endTime = `${end.getHours().toString().padStart(2, "0")}:${end.getMinutes().toString().padStart(2, "0")}`;
+    }
+
     setFormData({
       prompt: question.prompt,
       type: question.type,
@@ -253,6 +265,10 @@ export default function AdminPage() {
       correct_answer: question.correct_answer || "",
       answer_min: question.answer_min?.toString() || "",
       answer_max: question.answer_max?.toString() || "",
+      release_date: relDate,
+      release_time: relTime,
+      end_date: endDate,
+      end_time: endTime,
     });
   };
 
@@ -266,6 +282,10 @@ export default function AdminPage() {
       correct_answer: "",
       answer_min: "",
       answer_max: "",
+      release_date: "2025-12-23",
+      release_time: "09:00",
+      end_date: "2025-12-23",
+      end_time: "23:00",
     });
   };
 
@@ -306,71 +326,6 @@ export default function AdminPage() {
               </option>
             ))}
           </select>
-        </div>
-
-        {/* Quiz Timing */}
-        <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
-          <h2 className="font-semibold mb-3 text-black">Quiz Timing (Bali Time UTC+8)</h2>
-
-          {dateTimeError && (
-            <div className="mb-3 p-3 bg-red-100 border border-red-300 rounded-lg text-red-700 text-sm">
-              ⚠️ {dateTimeError}
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-4 mb-3">
-            <div>
-              <label className="block text-sm mb-1 text-black">Release Date</label>
-              <input
-                type="date"
-                value={releaseDate}
-                onChange={(e) => {
-                  setReleaseDate(e.target.value);
-                  setDateTimeError("");
-                }}
-                className="w-full p-2 border rounded-lg text-black"
-              />
-            </div>
-            <div>
-              <label className="block text-sm mb-1 text-black">Release Time</label>
-              <input
-                type="time"
-                value={releaseTime}
-                onChange={(e) => {
-                  setReleaseTime(e.target.value);
-                  setDateTimeError("");
-                }}
-                className="w-full p-2 border rounded-lg text-black"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm mb-1 text-black">End Date</label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => {
-                  setEndDate(e.target.value);
-                  setDateTimeError("");
-                }}
-                className="w-full p-2 border rounded-lg text-black"
-              />
-            </div>
-            <div>
-              <label className="block text-sm mb-1 text-black">End Time</label>
-              <input
-                type="time"
-                value={endTime}
-                onChange={(e) => {
-                  setEndTime(e.target.value);
-                  setDateTimeError("");
-                }}
-                className="w-full p-2 border rounded-lg text-black"
-              />
-            </div>
-          </div>
         </div>
 
         {/* Questions List */}
@@ -428,6 +383,23 @@ export default function AdminPage() {
                       {q.correct_answer && (
                         <div className="text-sm font-medium text-green-600 mt-1">
                           Correct: {q.correct_answer}
+                        </div>
+                      )}
+                      {q.release_time && q.end_time && (
+                        <div className="text-xs text-gray-500 mt-2">
+                          📅 {new Date(q.release_time).toLocaleString('en-US', {
+                            timeZone: 'Asia/Singapore',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })} - {new Date(q.end_time).toLocaleString('en-US', {
+                            timeZone: 'Asia/Singapore',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
                         </div>
                       )}
                     </div>
@@ -661,6 +633,53 @@ export default function AdminPage() {
                     )}
                   </div>
                 )}
+
+                {/* Question Timing */}
+                <div className="border-t pt-4 mt-4">
+                  <h3 className="text-sm font-semibold mb-3 text-black">Question Timing (Bali Time UTC+8)</h3>
+
+                  <div className="grid grid-cols-2 gap-4 mb-3">
+                    <div>
+                      <label className="block text-sm mb-1 text-black">Release Date</label>
+                      <input
+                        type="date"
+                        value={formData.release_date}
+                        onChange={(e) => setFormData({ ...formData, release_date: e.target.value })}
+                        className="w-full p-2 border rounded-lg text-black"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm mb-1 text-black">Release Time</label>
+                      <input
+                        type="time"
+                        value={formData.release_time}
+                        onChange={(e) => setFormData({ ...formData, release_time: e.target.value })}
+                        className="w-full p-2 border rounded-lg text-black"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm mb-1 text-black">End Date</label>
+                      <input
+                        type="date"
+                        value={formData.end_date}
+                        onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                        className="w-full p-2 border rounded-lg text-black"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm mb-1 text-black">End Time</label>
+                      <input
+                        type="time"
+                        value={formData.end_time}
+                        onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
+                        className="w-full p-2 border rounded-lg text-black"
+                      />
+                    </div>
+                  </div>
+                </div>
 
                 {/* Submit Button */}
                 <div className="flex gap-3 pt-4">

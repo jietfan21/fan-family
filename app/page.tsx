@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import EmojiPicker from "@/components/EmojiPicker";
 import { useAuth } from "@/contexts/AuthContext";
+import { getSupabase } from "@/lib/supabase";
 
 export default function Home() {
   return (
@@ -19,8 +20,50 @@ function HomeContent() {
     useAuth();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [unansweredCount, setUnansweredCount] = useState(0);
 
   const showPicker = isFirstLogin || showEmojiPicker;
+  const supabase = getSupabase();
+
+  // Fetch unanswered question count
+  useEffect(() => {
+    async function fetchUnansweredCount() {
+      if (!member) return;
+
+      try {
+        // Get all active questions (questions that are currently available to answer)
+        const now = new Date().toISOString();
+        const { data: questions } = await supabase
+          .from("quiz_questions")
+          .select("id, release_time, end_time")
+          .lte("release_time", now)
+          .gte("end_time", now);
+
+        if (!questions || questions.length === 0) {
+          setUnansweredCount(0);
+          return;
+        }
+
+        // Get user's answered questions
+        const { data: answers } = await supabase
+          .from("quiz_answers")
+          .select("question_id")
+          .eq("member_id", member.id);
+
+        const answeredIds = new Set(answers?.map((a) => a.question_id) || []);
+        const unanswered = questions.filter((q) => !answeredIds.has(q.id));
+
+        setUnansweredCount(unanswered.length);
+      } catch {
+        setUnansweredCount(0);
+      }
+    }
+
+    fetchUnansweredCount();
+    // Refresh count every 30 seconds
+    const interval = setInterval(fetchUnansweredCount, 30000);
+    return () => clearInterval(interval);
+  }, [member, supabase]);
 
   const handleEmojiSelect = async (emoji: string) => {
     setIsUpdating(true);
@@ -146,15 +189,23 @@ function HomeContent() {
         <div className="grid grid-cols-2 gap-4">
           {features.map((feature) => (
             <Link key={feature.href} href={feature.href}>
-              <div
-                className={`${feature.bg} rounded-3xl p-5 h-40 flex flex-col justify-between shadow-lg hover:shadow-xl transition-all active:scale-95 hover:-translate-y-1`}
-              >
-                <div className="text-4xl">{feature.icon}</div>
-                <div className="text-white">
-                  <h2 className="text-lg font-bold leading-tight">
-                    {feature.title}
-                  </h2>
-                  <p className="text-sm text-white/80">{feature.subtitle}</p>
+              <div className="relative">
+                {/* Notification Badge for Quiz */}
+                {feature.href === "/quiz" && unansweredCount > 0 && (
+                  <div className="absolute -top-2 -right-2 z-10 bg-red-600 text-white text-sm font-bold rounded-full w-8 h-8 flex items-center justify-center shadow-lg ring-2 ring-white">
+                    {unansweredCount}
+                  </div>
+                )}
+                <div
+                  className={`${feature.bg} rounded-3xl p-5 h-40 flex flex-col justify-between shadow-lg hover:shadow-xl transition-all active:scale-95 hover:-translate-y-1`}
+                >
+                  <div className="text-4xl">{feature.icon}</div>
+                  <div className="text-white">
+                    <h2 className="text-lg font-bold leading-tight">
+                      {feature.title}
+                    </h2>
+                    <p className="text-sm text-white/80">{feature.subtitle}</p>
+                  </div>
                 </div>
               </div>
             </Link>

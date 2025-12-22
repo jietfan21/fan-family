@@ -101,3 +101,27 @@ export type DailyRanking = {
   total_points: number;
   snapshot_at: string;
 };
+
+export type CarAssignment = {
+  id: string;
+  car_id: string;
+  car_name: string;
+  leader: string | null;
+  members: string[];
+  display_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type RoomAssignment = {
+  id: string;
+  hotel_key: string;
+  hotel_name: string;
+  room_type: string;
+  room_label: string | null;
+  members: string[];
+  note: string | null;
+  display_order: number;
+  created_at: string;
+  updated_at: string;
+};

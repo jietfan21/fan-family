@@ -54,6 +54,7 @@ function QuizContent() {
   const [countdown, setCountdown] = useState("");
   const [releaseTime, setReleaseTime] = useState<Date | null>(null);
   const [endTime, setEndTime] = useState<Date | null>(null);
+  const [questionCountdowns, setQuestionCountdowns] = useState<Record<string, string>>({});
 
   const selectedDay = tripDates[activeDay];
   const supabase = getSupabase();
@@ -79,23 +80,44 @@ function QuizContent() {
         const typedData = data as QuizQuestion[];
         setQuestions(typedData);
 
-        // Determine status based on release/end times
+        // Determine overall quiz status based on any question's timing
         const now = new Date();
-        const release = typedData[0].release_time ? new Date(typedData[0].release_time) : null;
-        const end = typedData[0].end_time ? new Date(typedData[0].end_time) : null;
+        let hasActiveQuestion = false;
+        let hasUpcomingQuestion = false;
+        let allEnded = true;
 
-        setReleaseTime(release);
-        setEndTime(end);
+        typedData.forEach((q) => {
+          const release = q.release_time ? new Date(q.release_time) : null;
+          const end = q.end_time ? new Date(q.end_time) : null;
 
-        if (!release || !end) {
-          setQuizStatus("active"); // No timing set, default to active
-        } else if (now < release) {
-          setQuizStatus("before_release");
-        } else if (now >= release && now < end) {
+          if (!release || !end) {
+            hasActiveQuestion = true;
+            allEnded = false;
+          } else if (now < release) {
+            hasUpcomingQuestion = true;
+            allEnded = false;
+          } else if (now >= release && now < end) {
+            hasActiveQuestion = true;
+            allEnded = false;
+          }
+        });
+
+        // Set overall status
+        if (hasActiveQuestion) {
           setQuizStatus("active");
-        } else {
+        } else if (hasUpcomingQuestion) {
+          setQuizStatus("before_release");
+        } else if (allEnded) {
           setQuizStatus("ended");
+        } else {
+          setQuizStatus("active");
         }
+
+        // For backward compatibility, set releaseTime/endTime from first question
+        const firstRelease = typedData[0]?.release_time ? new Date(typedData[0].release_time) : null;
+        const firstEnd = typedData[0]?.end_time ? new Date(typedData[0].end_time) : null;
+        setReleaseTime(firstRelease);
+        setEndTime(firstEnd);
       } catch {
         setQuestions([]);
         setQuizStatus("no_quiz");
@@ -144,6 +166,36 @@ function QuizContent() {
 
     return () => clearInterval(interval);
   }, [quizStatus, endTime]);
+
+  // Per-question countdown timers
+  useEffect(() => {
+    if (questions.length === 0) return;
+
+    const interval = setInterval(() => {
+      const now = new Date();
+      const newCountdowns: Record<string, string> = {};
+
+      questions.forEach((question) => {
+        const qEndTime = question.end_time ? new Date(question.end_time) : null;
+        if (qEndTime && now < qEndTime) {
+          const diff = qEndTime.getTime() - now.getTime();
+          const hours = Math.floor(diff / (1000 * 60 * 60));
+          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+          if (hours > 0) {
+            newCountdowns[question.id] = `${hours}h ${minutes}m ${seconds}s`;
+          } else {
+            newCountdowns[question.id] = `${minutes}m ${seconds}s`;
+          }
+        }
+      });
+
+      setQuestionCountdowns(newCountdowns);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [questions]);
 
   // Fetch user's submitted answers
   useEffect(() => {
@@ -378,7 +430,23 @@ function QuizContent() {
                 {questions.map((question, index) => {
                   const submitted = submittedAnswers[question.id];
                   const isAnswered = !!submitted;
-                  const showResults = quizStatus === "ended";
+
+                  // Determine per-question status
+                  const now = new Date();
+                  const qRelease = question.release_time ? new Date(question.release_time) : null;
+                  const qEnd = question.end_time ? new Date(question.end_time) : null;
+
+                  let questionStatus: "locked" | "active" | "ended" = "active";
+                  if (qRelease && qEnd) {
+                    if (now < qRelease) {
+                      questionStatus = "locked";
+                    } else if (now >= qEnd) {
+                      questionStatus = "ended";
+                    }
+                  }
+
+                  const showResults = questionStatus === "ended" || quizStatus === "ended";
+                  const canAnswer = questionStatus === "active" && !isAnswered;
 
                   return (
                     <div
@@ -390,6 +458,16 @@ function QuizContent() {
                       <div className="flex items-center justify-between text-xs text-gray-500">
                         <span>Question {index + 1}</span>
                         <div className="flex gap-2">
+                          {questionStatus === "locked" && (
+                            <span className="rounded-full bg-[#ff8522]/20 text-[#ff8522] px-2 py-0.5 text-xs font-medium">
+                              🔒 Locked
+                            </span>
+                          )}
+                          {questionStatus === "ended" && (
+                            <span className="rounded-full bg-gray-200 text-gray-600 px-2 py-0.5 text-xs font-medium">
+                              Closed
+                            </span>
+                          )}
                           {isAnswered && (
                             <span className="rounded-full bg-[#436c34]/20 text-[#436c34] px-2 py-0.5 text-xs font-medium">
                               Answered
@@ -405,6 +483,14 @@ function QuizContent() {
                       <p className="mt-2 font-semibold text-[#011a42]">
                         {question.prompt}
                       </p>
+
+                      {/* Question countdown timer */}
+                      {questionCountdowns[question.id] && (
+                        <div className="mt-2 flex items-center gap-2 text-[#ff8522] text-sm">
+                          <Clock className="w-4 h-4" />
+                          <span>Time left: {questionCountdowns[question.id]}</span>
+                        </div>
+                      )}
 
                       {/* Show user's answer if answered */}
                       {isAnswered && (
@@ -444,8 +530,15 @@ function QuizContent() {
                         </div>
                       )}
 
+                      {/* Locked message */}
+                      {questionStatus === "locked" && (
+                        <div className="mt-3 p-3 bg-[#ff8522]/10 rounded-lg text-sm text-gray-600 text-center">
+                          This question will be available soon
+                        </div>
+                      )}
+
                       {/* Input fields (only if active and not answered) */}
-                      {quizStatus === "active" && !isAnswered && (
+                      {canAnswer && (
                         <>
                           {question.type === "mc" && question.options ? (
                             <div className="mt-3 space-y-2">
