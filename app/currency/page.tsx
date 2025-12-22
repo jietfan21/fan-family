@@ -24,7 +24,7 @@ type Currency = 'IDR' | 'MYR' | 'SGD' | 'AUD' | 'TWD';
 export default function CurrencyCalculator() {
   const [fromCurrency, setFromCurrency] = useState<Currency>('IDR');
   const [toCurrency, setToCurrency] = useState<Currency>('MYR');
-  const [inputValue, setInputValue] = useState<string>('10000');
+  const [inputValue, setInputValue] = useState<string>('0');
   const [result, setResult] = useState<number>(0);
 
   // Load saved currency preference from cookie
@@ -210,12 +210,20 @@ export default function CurrencyCalculator() {
         {/* Numpad */}
         <div className="bg-white rounded-2xl shadow-lg p-3">
           <div className="grid grid-cols-3 gap-2">
+            {/* Clear button spans full width */}
+            <button
+              onClick={handleClear}
+              className="col-span-3 rounded-xl bg-[#ff8522] text-white hover:bg-[#ff9544] active:bg-[#e67619] flex items-center justify-center text-base font-semibold transition-colors shadow-sm h-10"
+            >
+              Clear
+            </button>
+
             {/* Numbers 7-9 */}
             {['7', '8', '9'].map((num) => (
               <button
                 key={num}
                 onClick={() => handleNumberPress(num)}
-                className="aspect-square rounded-xl bg-gray-100 hover:bg-gray-200 active:bg-gray-300 flex items-center justify-center text-2xl font-semibold text-[#011a42] transition-colors shadow-sm"
+                className="h-16 rounded-xl bg-gray-100 hover:bg-gray-200 active:bg-gray-300 flex items-center justify-center text-2xl font-semibold text-[#011a42] transition-colors shadow-sm"
               >
                 {num}
               </button>
@@ -226,7 +234,7 @@ export default function CurrencyCalculator() {
               <button
                 key={num}
                 onClick={() => handleNumberPress(num)}
-                className="aspect-square rounded-xl bg-gray-100 hover:bg-gray-200 active:bg-gray-300 flex items-center justify-center text-2xl font-semibold text-[#011a42] transition-colors shadow-sm"
+                className="h-16 rounded-xl bg-gray-100 hover:bg-gray-200 active:bg-gray-300 flex items-center justify-center text-2xl font-semibold text-[#011a42] transition-colors shadow-sm"
               >
                 {num}
               </button>
@@ -237,7 +245,7 @@ export default function CurrencyCalculator() {
               <button
                 key={num}
                 onClick={() => handleNumberPress(num)}
-                className="aspect-square rounded-xl bg-gray-100 hover:bg-gray-200 active:bg-gray-300 flex items-center justify-center text-2xl font-semibold text-[#011a42] transition-colors shadow-sm"
+                className="h-16 rounded-xl bg-gray-100 hover:bg-gray-200 active:bg-gray-300 flex items-center justify-center text-2xl font-semibold text-[#011a42] transition-colors shadow-sm"
               >
                 {num}
               </button>
@@ -246,31 +254,23 @@ export default function CurrencyCalculator() {
             {/* Bottom row */}
             <button
               onClick={handleDecimal}
-              className="aspect-square rounded-xl bg-gray-100 hover:bg-gray-200 active:bg-gray-300 flex items-center justify-center text-2xl font-semibold text-[#011a42] transition-colors shadow-sm"
+              className="h-16 rounded-xl bg-gray-100 hover:bg-gray-200 active:bg-gray-300 flex items-center justify-center text-2xl font-semibold text-[#011a42] transition-colors shadow-sm"
             >
               .
             </button>
             <button
               onClick={() => handleNumberPress('0')}
-              className="aspect-square rounded-xl bg-gray-100 hover:bg-gray-200 active:bg-gray-300 flex items-center justify-center text-2xl font-semibold text-[#011a42] transition-colors shadow-sm"
+              className="h-16 rounded-xl bg-gray-100 hover:bg-gray-200 active:bg-gray-300 flex items-center justify-center text-2xl font-semibold text-[#011a42] transition-colors shadow-sm"
             >
               0
             </button>
             <button
               onClick={handleBackspace}
-              className="aspect-square rounded-xl bg-gray-200 hover:bg-gray-300 active:bg-gray-400 flex items-center justify-center transition-colors shadow-sm"
+              className="h-16 rounded-xl bg-gray-200 hover:bg-gray-300 active:bg-gray-400 flex items-center justify-center transition-colors shadow-sm"
             >
               <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z" />
               </svg>
-            </button>
-
-            {/* Clear button spans full width */}
-            <button
-              onClick={handleClear}
-              className="col-span-3 rounded-xl bg-[#ff8522] text-white hover:bg-[#ff9544] active:bg-[#e67619] flex items-center justify-center text-lg font-semibold transition-colors shadow-sm py-3"
-            >
-              Clear
             </button>
           </div>
         </div>
