@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/quiz/grade",
-      "schedule": "* * * * *"
+      "schedule": "59 23 * * *"
     }
   ]
 }
