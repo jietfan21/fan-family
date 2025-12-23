@@ -533,7 +533,7 @@ function QuizContent() {
                       {/* Locked message */}
                       {questionStatus === "locked" && (
                         <div className="mt-3 p-3 bg-[#ff8522]/10 rounded-lg text-sm text-gray-600 text-center">
-                          This question will be available soon
+                          This question will be available soon...
                         </div>
                       )}
 
