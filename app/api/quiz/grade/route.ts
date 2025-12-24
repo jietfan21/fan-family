@@ -17,37 +17,41 @@ export async function GET() {
   try {
     const supabase = getSupabase();
 
-    // Find all questions that have ended and haven't been graded yet
+    // Find all questions that have a correct answer set (regardless of timing)
     const { data: questions, error: fetchError } = await supabase
       .from("quiz_questions")
       .select("id, end_time, correct_answer, is_prediction")
-      .not("end_time", "is", null)
-      .not("correct_answer", "is", null)
-      .lt("end_time", new Date().toISOString());
+      .not("correct_answer", "is", null);
 
     if (fetchError) {
       return NextResponse.json({ error: fetchError.message }, { status: 500 });
     }
 
     if (!questions || questions.length === 0) {
-      return NextResponse.json({ message: "No questions to grade", graded: 0 });
+      return NextResponse.json({ message: "No questions to grade", graded: 0, total: 0 });
     }
 
     // Grade each question
     let gradedCount = 0;
     const errors: string[] = [];
+    const details: string[] = [];
 
     for (const question of questions) {
-      const { error } = await supabase.rpc("grade_question", {
-        question_uuid: question.id,
+      const { data, error } = await supabase.rpc("grade_question", {
+        p_question_id: question.id,
       });
 
       if (error) {
         errors.push(`Failed to grade ${question.id}: ${error.message}`);
+        details.push(`Question ${question.id}: ERROR - ${error.message}`);
       } else {
         gradedCount++;
+        details.push(`Question ${question.id}: RPC called successfully (data: ${JSON.stringify(data)})`);
       }
     }
+
+    // Log details for debugging
+    console.log("Grading details:", details);
 
     return NextResponse.json({
       message: `Graded ${gradedCount} questions`,
@@ -76,7 +80,7 @@ export async function POST(request: NextRequest) {
 
     // Grade the specific question
     const { error } = await supabase.rpc("grade_question", {
-      question_uuid: questionId,
+      p_question_id: questionId,
     });
 
     if (error) {

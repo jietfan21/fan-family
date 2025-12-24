@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
 import { getSupabase, QuizQuestion, MemberRankingWithChange } from "@/lib/supabase";
-import { Clock, ArrowUp, ArrowDown, Settings } from "lucide-react";
+import { Clock, ArrowUp, ArrowDown, Settings, Award } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 type MainTab = "quiz" | "ranking";
@@ -55,6 +55,7 @@ function QuizContent() {
   const [releaseTime, setReleaseTime] = useState<Date | null>(null);
   const [endTime, setEndTime] = useState<Date | null>(null);
   const [questionCountdowns, setQuestionCountdowns] = useState<Record<string, string>>({});
+  const [isGrading, setIsGrading] = useState(false);
 
   const selectedDay = tripDates[activeDay];
   const supabase = getSupabase();
@@ -292,6 +293,30 @@ function QuizContent() {
     setTimeout(() => setSubmitMessage(null), 3000);
   };
 
+  const handleGradeAll = async () => {
+    if (!member?.is_dev) return;
+
+    setIsGrading(true);
+    try {
+      const response = await fetch("/api/quiz/grade", {
+        method: "GET",
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`✅ Grading complete!\n\nGraded ${data.graded} out of ${data.total} questions.`);
+        // Refresh the page to show updated scores
+        window.location.reload();
+      } else {
+        alert(`❌ Grading failed: ${data.error || "Unknown error"}`);
+      }
+    } catch (error) {
+      alert(`❌ Error: ${error instanceof Error ? error.message : "Failed to grade questions"}`);
+    }
+    setIsGrading(false);
+  };
+
   const statusLabel =
     quizStatus === "active"
       ? "Open"
@@ -324,12 +349,22 @@ function QuizContent() {
           </div>
           <div className="flex items-center gap-2">
             {member?.is_dev && (
-              <button
-                onClick={() => router.push("/admin")}
-                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-              >
-                <Settings className="w-5 h-5" />
-              </button>
+              <>
+                <button
+                  onClick={handleGradeAll}
+                  disabled={isGrading}
+                  className="p-2 hover:bg-white/20 rounded-lg transition-colors disabled:opacity-50"
+                  title="Grade all questions"
+                >
+                  <Award className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => router.push("/admin")}
+                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                >
+                  <Settings className="w-5 h-5" />
+                </button>
+              </>
             )}
             <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm">
               {member?.emoji || member?.name.charAt(0)}
