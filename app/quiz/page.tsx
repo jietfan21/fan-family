@@ -6,7 +6,9 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
 import { getSupabase, QuizQuestion, MemberRankingWithChange } from "@/lib/supabase";
 import { Clock, ArrowUp, ArrowDown, Settings, Award } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import Day6PhotoUpload from "@/components/Day6PhotoUpload";
+import Day6PhotoCarousel from "@/components/Day6PhotoCarousel";
 
 type MainTab = "quiz" | "ranking";
 type QuizStatus = "before_release" | "active" | "ended" | "no_quiz";
@@ -25,7 +27,7 @@ const tripDates = [
   { id: "day3", label: "Day 3", date: "Dec 24", dateObj: new Date("2025-12-24T00:00:00+08:00") },
   { id: "day4", label: "Day 4", date: "Dec 25", dateObj: new Date("2025-12-25T00:00:00+08:00") },
   { id: "day5", label: "Day 5", date: "Dec 26", dateObj: new Date("2025-12-26T00:00:00+08:00") },
-  { id: "day6", label: "Day 6", date: "Dec 27", dateObj: new Date("2025-12-27T00:00:00+08:00") },
+  { id: "day6", label: "Upload", date: "Dec 27", dateObj: new Date("2025-12-27T00:00:00+08:00") },
 ];
 
 export default function QuizPage() {
@@ -39,6 +41,7 @@ export default function QuizPage() {
 function QuizContent() {
   const { member } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<MainTab>("quiz");
   const [activeDay, setActiveDay] = useState(1); // Default to day 2
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
@@ -56,13 +59,34 @@ function QuizContent() {
   const [endTime, setEndTime] = useState<Date | null>(null);
   const [questionCountdowns, setQuestionCountdowns] = useState<Record<string, string>>({});
   const [isGrading, setIsGrading] = useState(false);
+  const [userPhotoUrl, setUserPhotoUrl] = useState<string | null>(null);
 
   const selectedDay = tripDates[activeDay];
   const supabase = getSupabase();
+  const isDay6 = selectedDay.id === "day6";
+
+  // Handle URL parameter for day navigation
+  useEffect(() => {
+    const dayParam = searchParams.get("day");
+    if (dayParam) {
+      const dayIndex = tripDates.findIndex(d => d.id === dayParam);
+      if (dayIndex !== -1) {
+        setActiveDay(dayIndex);
+      }
+    }
+  }, [searchParams]);
 
   // Fetch questions and determine status
   useEffect(() => {
     async function fetchQuestions() {
+      // Skip fetching questions for Day 6 (photo upload day)
+      if (isDay6) {
+        setQuestions([]);
+        setQuizStatus("no_quiz");
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
       try {
         const { data } = await supabase
@@ -229,6 +253,27 @@ function QuizContent() {
     fetchUserAnswers();
   }, [member, quizStatus]); // Refetch when status changes (to update after grading)
 
+  // Fetch user's Day 6 photo
+  useEffect(() => {
+    async function fetchUserPhoto() {
+      if (!member || !isDay6) return;
+
+      try {
+        const { data } = await supabase
+          .from("members")
+          .select("day6_photo_url")
+          .eq("id", member.id)
+          .single();
+
+        setUserPhotoUrl(data?.day6_photo_url || null);
+      } catch {
+        setUserPhotoUrl(null);
+      }
+    }
+
+    fetchUserPhoto();
+  }, [member, isDay6, supabase]);
+
   // Fetch rankings with position changes
   useEffect(() => {
     async function fetchRankings() {
@@ -315,6 +360,10 @@ function QuizContent() {
       alert(`❌ Error: ${error instanceof Error ? error.message : "Failed to grade questions"}`);
     }
     setIsGrading(false);
+  };
+
+  const handlePhotoUploadSuccess = (photoUrl: string) => {
+    setUserPhotoUrl(photoUrl);
   };
 
   const statusLabel =
@@ -417,28 +466,30 @@ function QuizContent() {
               ))}
             </div>
 
-            {/* Day Info */}
-            <div className="mb-4 bg-white/10 rounded-2xl p-4">
-              <p className="text-xs text-white/60">{selectedDay.date}</p>
-              <div className="flex items-center justify-between mt-1">
-                <h2 className="text-lg font-bold text-white">
-                  {selectedDay.label} Quiz
-                </h2>
-                <span
-                  className={`text-xs font-semibold px-2 py-1 rounded-full ${statusClass}`}
-                >
-                  {statusLabel}
-                </span>
-              </div>
-
-              {/* Countdown Timer */}
-              {quizStatus === "before_release" && countdown && (
-                <div className="mt-3 flex items-center gap-2 text-white">
-                  <Clock className="w-4 h-4" />
-                  <span className="text-sm">Releases in: {countdown}</span>
+            {/* Day Info - Hidden for Day 6 */}
+            {!isDay6 && (
+              <div className="mb-4 bg-white/10 rounded-2xl p-4">
+                <p className="text-xs text-white/60">{selectedDay.date}</p>
+                <div className="flex items-center justify-between mt-1">
+                  <h2 className="text-lg font-bold text-white">
+                    {selectedDay.label} Quiz
+                  </h2>
+                  <span
+                    className={`text-xs font-semibold px-2 py-1 rounded-full ${statusClass}`}
+                  >
+                    {statusLabel}
+                  </span>
                 </div>
-              )}
-            </div>
+
+                {/* Countdown Timer */}
+                {quizStatus === "before_release" && countdown && (
+                  <div className="mt-3 flex items-center gap-2 text-white">
+                    <Clock className="w-4 h-4" />
+                    <span className="text-sm">Releases in: {countdown}</span>
+                  </div>
+                )}
+              </div>
+            )}
 
             {submitMessage && (
               <div className="mb-4 p-3 bg-[#436c34]/20 text-[#436c34] rounded-lg text-sm text-center border border-[#436c34]/30">
@@ -447,7 +498,19 @@ function QuizContent() {
             )}
 
             {/* Quiz Content */}
-            {isLoading ? (
+            {isDay6 ? (
+              // Day 6 Photo Upload Feature
+              <div className="space-y-6">
+                {member && (
+                  <Day6PhotoUpload
+                    memberId={member.id}
+                    currentPhotoUrl={userPhotoUrl}
+                    onUploadSuccess={handlePhotoUploadSuccess}
+                  />
+                )}
+                <Day6PhotoCarousel />
+              </div>
+            ) : isLoading ? (
               <div className="text-center py-8 text-white/60">
                 Loading questions...
               </div>
@@ -649,28 +712,36 @@ function QuizContent() {
                 No rankings yet. Answer questions to earn points!
               </div>
             ) : (
-              rankings.map((player, index) => (
-                <div
-                  key={player.id}
-                  className={`bg-white rounded-2xl shadow-md p-3 flex items-center justify-between ${
-                    player.id === member?.id ? "ring-2 ring-[#00b4fb]" : ""
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    {/* Rank badge */}
-                    <div
-                      className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold ${
-                        index === 0
-                          ? "bg-[#ff8522]"
+              rankings.map((player, index) => {
+                const isTopThree = index < 3;
+                const medalEmoji = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : null;
+
+                return (
+                  <div
+                    key={player.id}
+                    className={`rounded-2xl shadow-md p-3 flex items-center justify-between ${
+                      player.id === member?.id ? "ring-2 ring-[#00b4fb]" : ""
+                    } ${
+                      isTopThree
+                        ? index === 0
+                          ? "bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-300 shadow-lg"
                           : index === 1
-                            ? "bg-gray-400"
-                            : index === 2
-                              ? "bg-amber-600"
-                              : "bg-gray-300"
-                      }`}
-                    >
-                      {player.current_rank}
-                    </div>
+                            ? "bg-gradient-to-r from-gray-50 to-slate-100 border-2 border-gray-300 shadow-lg"
+                            : "bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-300 shadow-lg"
+                        : "bg-white"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      {/* Rank badge */}
+                      {medalEmoji ? (
+                        <div className="w-9 h-9 flex items-center justify-center text-2xl">
+                          {medalEmoji}
+                        </div>
+                      ) : (
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold bg-gray-300">
+                          {player.current_rank}
+                        </div>
+                      )}
                     {/* Avatar */}
                     <div className="w-10 h-10 rounded-full bg-[#00b4fb] flex items-center justify-center text-xl shadow-sm">
                       {player.emoji || (
@@ -719,7 +790,8 @@ function QuizContent() {
                     </span>
                   </div>
                 </div>
-              ))
+                );
+              })
             )}
           </div>
         )}

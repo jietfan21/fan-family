@@ -43,6 +43,8 @@ export type Member = {
   role: "dad" | "mom" | "kid" | null;
   partner_id: string | null;
   is_joining: boolean;
+  day6_photo_url: string | null;
+  day6_photo_uploaded_at: string | null;
 };
 
 export type Family = {
