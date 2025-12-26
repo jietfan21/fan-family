@@ -19,6 +19,8 @@ const NON_JOINING_MEMBERS: Record<number, Member[]> = {
       role: "kid",
       partner_id: null,
       is_joining: false,
+      day6_photo_url: null,
+      day6_photo_uploaded_at: null,
     },
   ],
   4: [
@@ -33,6 +35,8 @@ const NON_JOINING_MEMBERS: Record<number, Member[]> = {
       role: "kid",
       partner_id: null,
       is_joining: false,
+      day6_photo_url: null,
+      day6_photo_uploaded_at: null,
     },
   ],
 };
