@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import EmojiPicker from "@/components/EmojiPicker";
+import WinnerCelebration from "@/components/WinnerCelebration";
 import { useAuth } from "@/contexts/AuthContext";
 import { getSupabase } from "@/lib/supabase";
 import Image from "next/image";
@@ -25,6 +26,17 @@ interface Photo {
   day6_photo_uploaded_at: string;
 }
 
+interface Winner {
+  id: string;
+  name: string;
+  emoji: string | null;
+  total_points: number;
+  correct_answers: number;
+  total_answers: number;
+  accuracy_percentage: number;
+  rank: number;
+}
+
 function HomeContent() {
   const { member, logout, updateEmoji, isFirstLogin, setFirstLoginComplete } =
     useAuth();
@@ -33,12 +45,52 @@ function HomeContent() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [unansweredCount, setUnansweredCount] = useState(0);
   const [day6Photos, setDay6Photos] = useState<Photo[]>([]);
-  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const [shuffledIndices, setShuffledIndices] = useState<number[]>([]);
+  const [currentShuffleIndex, setCurrentShuffleIndex] = useState(0);
   const [showPhotoPreview, setShowPhotoPreview] = useState(false);
   const [isLoadingPhotos, setIsLoadingPhotos] = useState(true);
+  const [showWinnerCelebration, setShowWinnerCelebration] = useState(false);
+  const [winners, setWinners] = useState<Winner[]>([]);
 
   const showPicker = isFirstLogin || showEmojiPicker;
   const supabase = getSupabase();
+
+  // Helper function to shuffle array
+  const shuffleArray = (length: number): number[] => {
+    const arr = Array.from({ length }, (_, i) => i);
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  };
+
+  // Fetch quiz winners and show celebration popup (once per session)
+  useEffect(() => {
+    async function fetchWinners() {
+      // Check if we've already shown the popup this session
+      const hasShownPopup = sessionStorage.getItem("winnerPopupShown");
+      if (hasShownPopup === "true") {
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/quiz/winners");
+        const data = await response.json();
+
+        if (data.winners && data.winners.length > 0) {
+          setWinners(data.winners);
+          setShowWinnerCelebration(true);
+          // Mark as shown for this session
+          sessionStorage.setItem("winnerPopupShown", "true");
+        }
+      } catch (error) {
+        console.error("Failed to fetch winners:", error);
+      }
+    }
+
+    fetchWinners();
+  }, []);
 
   // Fetch Day 6 photos
   useEffect(() => {
@@ -50,7 +102,15 @@ function HomeContent() {
           .not("day6_photo_url", "is", null)
           .order("day6_photo_uploaded_at", { ascending: true });
 
-        setDay6Photos((data as Photo[]) || []);
+        const photos = (data as Photo[]) || [];
+        setDay6Photos(photos);
+
+        // Initialize with shuffled indices and start at random position
+        if (photos.length > 0) {
+          const shuffled = shuffleArray(photos.length);
+          setShuffledIndices(shuffled);
+          setCurrentShuffleIndex(0);
+        }
       } catch {
         setDay6Photos([]);
       } finally {
@@ -64,16 +124,27 @@ function HomeContent() {
     return () => clearInterval(interval);
   }, [supabase]);
 
-  // Auto-rotate photos
+  // Auto-rotate photos through shuffled indices
   useEffect(() => {
     if (day6Photos.length <= 1) return;
 
     const interval = setInterval(() => {
-      setCurrentPhotoIndex((prev) => (prev + 1) % day6Photos.length);
+      setCurrentShuffleIndex((prev) => {
+        const next = prev + 1;
+        // If we've shown all photos, reshuffle
+        if (next >= shuffledIndices.length) {
+          setShuffledIndices(shuffleArray(day6Photos.length));
+          return 0;
+        }
+        return next;
+      });
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [day6Photos.length]);
+  }, [day6Photos.length, shuffledIndices.length]);
+
+  // Get current photo based on shuffled index
+  const currentPhotoIndex = shuffledIndices[currentShuffleIndex] || 0;
 
   // Fetch unanswered question count
   useEffect(() => {
@@ -165,6 +236,13 @@ function HomeContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#011a42] via-[#0a2d5c] to-[#011a42]">
+      {/* Winner Celebration Popup */}
+      <WinnerCelebration
+        isOpen={showWinnerCelebration}
+        onClose={() => setShowWinnerCelebration(false)}
+        winners={winners}
+      />
+
       {/* Emoji Picker Modal */}
       <EmojiPicker
         isOpen={showPicker}
@@ -343,7 +421,7 @@ function HomeContent() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setCurrentPhotoIndex((prev) => (prev - 1 + day6Photos.length) % day6Photos.length);
+                        setCurrentShuffleIndex((prev: number) => (prev - 1 + shuffledIndices.length) % shuffledIndices.length);
                       }}
                       className="absolute left-2 top-1/2 -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 shadow-lg transition-all"
                     >
@@ -354,7 +432,7 @@ function HomeContent() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setCurrentPhotoIndex((prev) => (prev + 1) % day6Photos.length);
+                        setCurrentShuffleIndex((prev: number) => (prev + 1) % shuffledIndices.length);
                       }}
                       className="absolute right-2 top-1/2 -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 shadow-lg transition-all"
                     >
@@ -369,12 +447,12 @@ function HomeContent() {
               {/* Dots Indicator */}
               {day6Photos.length > 1 && (
                 <div className="flex justify-center gap-2 mb-4">
-                  {day6Photos.map((_, index) => (
+                  {shuffledIndices.map((_, dotIndex) => (
                     <button
-                      key={index}
-                      onClick={() => setCurrentPhotoIndex(index)}
+                      key={dotIndex}
+                      onClick={() => setCurrentShuffleIndex(dotIndex)}
                       className={`w-2 h-2 rounded-full transition-all ${
-                        index === currentPhotoIndex
+                        dotIndex === currentShuffleIndex
                           ? "bg-blue-600 w-6"
                           : "bg-gray-300 hover:bg-gray-400"
                       }`}
